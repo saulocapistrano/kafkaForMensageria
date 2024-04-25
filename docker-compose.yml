@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  zookeeper: 
+    image: confluentinc/cp-zookeeper:latest
+    networks: 
+      - broker-kafka
+    environment:  
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka: 
+    image: confluentinc/cp-kafka:latest      
+    networks: 
+      - broker-kafka
+    depends_on: 
+      - zookeeper
+    ports: 
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092  
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT  # Define o mapeamento de protocolos de segurança para os listeners
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT  # Define o nome do listener inter-broker
+      KAFKA_OFFSET_TOPIC_REPLICATION_FACTOR: 1  # Fator de replicação para o tópico de offset
+
+  kafdrop: 
+    image: obsidiandynamics/kafdrop:latest  # Corrigido de "latest" para "latest"
+    networks:
+      - broker-kafka
+    depends_on: 
+      - kafka 
+    ports:
+      - "19000:9000"
+    environment: 
+      KAFKA_BROKERCONNECT: kafka:29092  # Corrigido de "KAFKA_BROKERCONNECT" para "KAFKA_BROKERCONNECT"
+
+networks:
+  broker-kafka:
+    driver: bridge  
